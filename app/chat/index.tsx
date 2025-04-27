@@ -23,8 +23,8 @@ const API_BASE_URL = "https://calculator-app-backend-wy7h.onrender.com";
 type ValidUsername = "Kunal" | "friend";
 
 const VALID_USERS: Record<ValidUsername, string> = {
-  Kunal: "123",
-  friend: "123",
+  Kunal: "Lanuk",
+  friend: "Dhanera",
 };
 
 type Message = {

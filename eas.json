@@ -1,0 +1,26 @@
+{
+  "cli": {
+    "version": ">= 16.3.2",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {
+      "android":{
+        "serviceAccountKeyPath":"./calculator-458111-bcec7fdef4fb.json",
+        "track":"internal"
+      }
+    }
+  }
+}
