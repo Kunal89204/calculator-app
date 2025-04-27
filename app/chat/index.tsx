@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,11 +21,12 @@ import { Ionicons } from "@expo/vector-icons";
 const API_BASE_URL = "https://calculator-app-backend-wy7h.onrender.com";
 
 // Define a type for valid usernames
-type ValidUsername = "Kunal" | "friend";
+type ValidUsername = "Kunal" | "friend" | "reviewer";
 
 const VALID_USERS: Record<ValidUsername, string> = {
   Kunal: "Lanuk",
   friend: "Dhanera",
+  reviewer: "review123", // Added reviewer account
 };
 
 type Message = {
@@ -33,6 +35,34 @@ type Message = {
   message: string;
   timestamp: string;
 };
+
+// Sample messages for reviewer to see
+const REVIEWER_MESSAGES: Message[] = [
+  {
+    _id: "review1",
+    sender: "Kunal",
+    message: "Hello! This is a sample message for the reviewer.",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    _id: "review2",
+    sender: "friend",
+    message: "Hi Kunal, thanks for sharing this app for review.",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    _id: "review3",
+    sender: "Kunal",
+    message: "Feel free to test the chat functionality!",
+    timestamp: new Date().toISOString(),
+  },
+  {
+    _id: "review4",
+    sender: "friend",
+    message: "The UI looks great. I like the dark theme.",
+    timestamp: new Date().toISOString(),
+  },
+];
 
 const Chat = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,6 +73,7 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [socket, setSocket] = useState<any>(null);
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [isReviewer, setIsReviewer] = useState<boolean>(false);
 
   useEffect(() => {
     // Initialize socket connection
@@ -58,14 +89,20 @@ const Chat = () => {
   useEffect(() => {
     // Fetch existing chats when authenticated
     if (isAuthenticated) {
-      fetchChats();
+      if (isReviewer) {
+        // Set sample messages for reviewer
+        setMessages(REVIEWER_MESSAGES);
+      } else {
+        // Fetch real chats for actual users
+        fetchChats();
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isReviewer]);
 
   useEffect(() => {
     let typingTimeout: NodeJS.Timeout;
 
-    if (socket && isAuthenticated) {
+    if (socket && isAuthenticated && !isReviewer) {
       socket.on("message", (newMsg: Message) => {
         setMessages((prevMessages) => [...prevMessages, newMsg]);
       });
@@ -89,7 +126,7 @@ const Chat = () => {
       }
       if (typingTimeout) clearTimeout(typingTimeout);
     };
-  }, [socket, isAuthenticated]);
+  }, [socket, isAuthenticated, isReviewer]);
 
   const fetchChats = async () => {
     try {
@@ -103,12 +140,22 @@ const Chat = () => {
   };
 
   const handleLogin = () => {
-    // Check if username and password are valid
+    // Check if username is reviewer
+    if (username === "reviewer" && password === "review123") {
+      setIsAuthenticated(true);
+      setIsReviewer(true);
+      setAuthError("");
+      return;
+    }
+
+    // Check if username and password are valid for regular users
     if (isValidUsername(username) && VALID_USERS[username] === password) {
       setIsAuthenticated(true);
+      setIsReviewer(false);
       setAuthError("");
     } else {
       setAuthError("Invalid username or password. Please try again.");
+      
     }
   };
 
@@ -118,7 +165,36 @@ const Chat = () => {
   };
 
   const sendMessage = async () => {
-    if (newMessage.trim() === "" || !socket) return;
+    if (newMessage.trim() === "") return;
+
+    if (isReviewer) {
+      // For reviewer, just add message locally without sending to backend
+      const reviewerMsg: Message = {
+        _id: `local_${Date.now()}`,
+        sender: username,
+        message: newMessage,
+        timestamp: new Date().toISOString(),
+      };
+      
+      setMessages((prevMessages) => [...prevMessages, reviewerMsg]);
+      setNewMessage("");
+      
+      // Simulate receiving a response after a short delay
+      setTimeout(() => {
+        const responseMsg: Message = {
+          _id: `local_${Date.now() + 1}`,
+          sender: username === "reviewer" ? "Kunal" : "reviewer",
+          message: "Thanks for testing the chat functionality!",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prevMessages) => [...prevMessages, responseMsg]);
+      }, 1500);
+      
+      return;
+    }
+
+    // For real users, send message via socket
+    if (!socket) return;
 
     try {
       // Emit message via socket with sender username
@@ -135,7 +211,9 @@ const Chat = () => {
   };
 
   const handleTyping = () => {
-    socket.emit("typing");
+    if (!isReviewer && socket) {
+      socket.emit("typing");
+    }
   };
 
   const renderLoginScreen = () => (
@@ -174,7 +252,7 @@ const Chat = () => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                borderRadius: 1, // or 20 for "xl", adjust as needed
+                borderRadius: 1,
                 padding: 16,
                 alignItems: "center",
                 width: "100%",
@@ -182,6 +260,19 @@ const Chat = () => {
             >
               <Text className="text-white font-bold text-lg">Login</Text>
             </LinearGradient>
+          </TouchableOpacity>
+          
+          {/* Hint for reviewer */}
+          <TouchableOpacity 
+            onPress={() => {
+              Alert.alert(
+                "Reviewer Access",
+                "For app review purposes, use:\nUsername: reviewer\nPassword: review123"
+              );
+            }}
+            className="mt-4"
+          >
+            <Text className="text-gray-500 text-center">App Reviewer? Tap here</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -194,7 +285,10 @@ const Chat = () => {
       <View className="flex-row items-center p-4 border-b border-gray-800">
         <View>
           <Text className="text-white text-lg font-bold">Private Chat</Text>
-          <Text className="text-gray-400 text-sm">Logged in as {username}</Text>
+          <Text className="text-gray-400 text-sm">
+            Logged in as {username}
+            {isReviewer && " (Review Mode)"}
+          </Text>
         </View>
       </View>
 
@@ -215,7 +309,8 @@ const Chat = () => {
           ))}
         </ScrollView>
 
-        <TypingIndicator isTyping={isTyping} />
+        {!isReviewer && <TypingIndicator isTyping={isTyping} />}
+        
         {/* Message Input */}
         <View className="flex-row items-center p-4 border-t border-gray-800">
           <TextInput
