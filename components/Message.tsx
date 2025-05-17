@@ -29,7 +29,7 @@ const Message: React.FC<MessageProps> = ({ msg, username }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.messageText}>{msg.message}s</Text>
+        <Text style={styles.messageText}>{msg.message}</Text>
       </LinearGradient>
       <Text style={styles.timestamp}>
         <Text style={styles.sender}>{msg.sender}</Text>{" "}
