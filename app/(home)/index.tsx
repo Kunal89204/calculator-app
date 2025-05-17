@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from "expo-router";
 import { Text, View, TouchableOpacity, StatusBar } from "react-native";
-
-
+import { logScreenView } from '@/firebase/analytics';
 
 export default function Index() {
-
   const router = useRouter();
   const [display, setDisplay] = useState('0');
   const [firstValue, setFirstValue] = useState<string | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
 
-  
+  useEffect(() => {
+    logScreenView('Home');
+  }, []);
 
   const handleNumberPress = (number: string) => {
     setDisplay(prevDisplay =>
@@ -66,8 +66,6 @@ export default function Index() {
     setFirstValue(null);
     setOperator(null);
   };
-
-
 
   const buttonStyle = "bg-gray-700 rounded-full w-20 h-20 justify-center items-center m-2";
   const buttonTextStyle = "text-white text-2xl";

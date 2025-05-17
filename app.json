@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.kunal89204.calculator"
+      "package": "com.kunal89204.calculator",
+      "googleServicesFile": "./google-services-calc.json"
     },
     "web": {
       "bundler": "metro",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Platform,
   StatusBar,
   Alert,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +18,7 @@ import axios from "axios";
 import Message from "@/components/Message";
 import TypingIndicator from "@/components/TypingIndicator";
 import { Ionicons } from "@expo/vector-icons";
+import { logScreenView } from '@/firebase/analytics';
 // Configuration
 const API_BASE_URL = "https://calculator-app-backend-wy7h.onrender.com";
 
@@ -35,6 +37,7 @@ type Message = {
   message: string;
   timestamp: string;
 };
+
 
 // Sample messages for reviewer to see
 const REVIEWER_MESSAGES: Message[] = [
@@ -64,6 +67,7 @@ const REVIEWER_MESSAGES: Message[] = [
   },
 ];
 
+
 const Chat = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -74,6 +78,21 @@ const Chat = () => {
   const [socket, setSocket] = useState<any>(null);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [isReviewer, setIsReviewer] = useState<boolean>(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+useEffect(() => {
+  logScreenView('Chat');
+}, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollViewRef.current && messages.length > 0) {
+      // Small delay to ensure layout is complete
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
 
   useEffect(() => {
     // Initialize socket connection
@@ -282,9 +301,9 @@ const Chat = () => {
   const renderChatInterface = () => (
     <SafeAreaView className="flex-1 bg-black">
       {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-gray-800">
+      <View className="flex-row items-center p-3 border-b border-gray-800">
         <View>
-          <Text className="text-white text-lg font-bold">Private Chat</Text>
+          <Text className="text-white text-sm font-bold">Private Chat</Text>
           <Text className="text-gray-400 text-sm">
             Logged in as {username}
             {isReviewer && " (Review Mode)"}
@@ -297,12 +316,23 @@ const Chat = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
+        <View style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: -1,
+        }}>
+          <Image
+            source={require('@/assets/images/lofi.jpg')}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        </View>
         <ScrollView
           className="flex-1 p-4"
-          ref={(ref) => {
-            // Auto scroll to bottom
-            ref?.scrollToEnd({ animated: true });
-          }}
+          ref={scrollViewRef}
         >
           {messages.map((msg) => (
             <Message key={msg._id} msg={msg} username={username} />
@@ -312,7 +342,7 @@ const Chat = () => {
         {!isReviewer && <TypingIndicator isTyping={isTyping} />}
         
         {/* Message Input */}
-        <View className="flex-row items-center p-4 border-t border-gray-800">
+        <View className="flex-row items-center px-4 pb-2  border-gray-400">
           <TextInput
             placeholder="Message..."
             placeholderTextColor="#666"
@@ -321,7 +351,7 @@ const Chat = () => {
               setNewMessage(text);
               handleTyping();
             }}
-            className="flex-1 bg-gray-800 text-white p-3 rounded-2xl mr-2"
+            className="flex-1 bg-black/20 text-white p-3 py-4 rounded-2xl mr-2 border  border-purple-500/30"
           />
           <TouchableOpacity
             onPress={sendMessage}

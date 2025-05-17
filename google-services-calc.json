@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "59414807832",
+    "project_id": "calculator-265ae",
+    "storage_bucket": "calculator-265ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59414807832:android:04ad117c75254dc5588a6d",
+        "android_client_info": {
+          "package_name": "com.kunal89204.calculator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvj658sARxOT1ba_n1fwnDqb6xV0SG_Us"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
